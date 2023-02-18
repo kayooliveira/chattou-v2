@@ -2,10 +2,14 @@
 @tailwind components;
 @tailwind utilities;
 
-html, body {
-  height:100%;
+html, body, #root {
+  height: 100%;
 }
 
 body {
   @apply bg-chattou-background font-chattou text-chattou-text;
+}
+
+.focus-default {
+  @apply outline-none focus:ring-1 focus:ring-offset-1 focus:ring-offset-transparent focus:ring-chattou-secondary;
 }
