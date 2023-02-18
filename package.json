@@ -12,6 +12,7 @@
     "phosphor-react": "^1.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-hot-toast": "^2.4.0",
     "react-router-dom": "^6.8.1",
     "tailwind-scrollbar": "^2.1.0",
     "vitawind": "^2.2.4",
