@@ -1,15 +1,37 @@
 import logoHorizontal from 'assets/img/logo-horizontal.png'
+import { onAuthStateChanged } from 'firebase/auth'
+import { auth } from 'lib/firebase'
 import { GoogleLogo } from 'phosphor-react'
 import { useEffect } from 'react'
 import { toast } from 'react-hot-toast'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { useAuthStore } from 'store/auth'
+import { useAuthStore, User } from 'store/auth'
 
 export function HomePage() {
   const signIn = useAuthStore(state => state.signIn)
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated)
+  const user = useAuthStore(state => state.user)
   const location = useLocation()
   const navigate = useNavigate()
   const locationState = location.state
+
+  const setUser = useAuthStore(state => state.setUser)
+  onAuthStateChanged(auth, user => {
+    if (user && !isAuthenticated) {
+      const { uid, displayName: name, photoURL: avatar } = user
+
+      if (name && avatar) {
+        const userData: User = {
+          uid,
+          name,
+          avatar,
+          username: ''
+        }
+        setUser(userData)
+      }
+    }
+  })
+
   useEffect(() => {
     if (locationState && locationState.notify) {
       switch (locationState.notify.type) {
@@ -24,6 +46,14 @@ export function HomePage() {
       }
     }
   }, [locationState])
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      toast.remove()
+      navigate('/conversations')
+      toast.success(`Bem vindo de volta, ${user.name}!`)
+    }
+  }, [isAuthenticated])
 
   async function handleSignIn() {
     await signIn()
