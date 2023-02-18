@@ -24,6 +24,7 @@ interface State {
   isAuthStateLoading: boolean
   signIn: () => Promise<void>
   signOut: () => Promise<void>
+  setUser: (user: User) => void
 }
 
 export const useAuthStore = create<State>(setState => ({
@@ -88,6 +89,30 @@ export const useAuthStore = create<State>(setState => ({
       setState(
         produce<State>(state => {
           state.isAuthenticated = false
+        })
+      )
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setState(
+        produce<State>(state => {
+          state.isAuthStateLoading = false
+        })
+      )
+    }
+  },
+  setUser: (user: User) => {
+    setState(
+      produce<State>(state => {
+        state.isAuthenticated = true
+      })
+    )
+
+    try {
+      setState(
+        produce<State>(state => {
+          state.user = user
+          state.isAuthenticated = true
         })
       )
     } catch (error) {
