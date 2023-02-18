@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow write: if
+          request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null;
+    }
+    match /chats/{chat} {
+      allow read, write: if resource.data.members[0] == request.auth.uid || resource.data.members[1] == request.auth.uid;
+    }
+    match /chats/{chat}/messages/{message} {
+      allow update: if resource.data.senderId != request.auth.id;
+      allow create: if request.auth != null;
+    }
+    match /conversations/{conversation=**} { // ! This line ensures that the chattou-v1 application continues to work while I finish v2, since I am using the same firestore.
+    	allow write,read: if request.auth !=null;
+		}
+  }
+}
