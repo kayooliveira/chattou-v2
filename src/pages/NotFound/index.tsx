@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 
 export function NotFoundPage() {
   return (
-    <div className="flex h-screen w-full items-center justify-center p-8 text-center text-chattou-text">
+    <div className="flex h-full w-full items-center justify-center p-8 text-center text-chattou-text">
       <div>
         <img src={logoHorizontal} alt="" className="mb-4" />
         <h1 className="text-3xl">Página não encontrada</h1>
