@@ -13,6 +13,7 @@ module.exports = {
           background: "#161616",
           backgroundLight: '#1f1f1f',
           textDark: "#C8C8C8",
+          textDarker: "#504F50",
           text: "#FFFFFF"
         },
       },
