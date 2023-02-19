@@ -13,3 +13,7 @@ body {
 .focus-default {
   @apply outline-none focus:ring-1 focus:ring-offset-1 focus:ring-offset-transparent focus:ring-chattou-secondary/50;
 }
+
+.scrollbar-chattou {
+  @apply scrollbar-thin scrollbar-track-transparent scrollbar-thumb-chattou-primary scrollbar-track-rounded-full scrollbar-thumb-rounded-full;
+}
