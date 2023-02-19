@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 html, body, #root {
-  height: 100%;
+height: 100%;
 }
 
 body {
@@ -11,5 +11,5 @@ body {
 }
 
 .focus-default {
-  @apply outline-none focus:ring-1 focus:ring-offset-1 focus:ring-offset-transparent focus:ring-chattou-secondary;
+  @apply outline-none focus:ring-1 focus:ring-offset-1 focus:ring-offset-transparent focus:ring-chattou-secondary/50;
 }
