@@ -1,4 +1,5 @@
 import { DefaultLayout } from 'layouts/Default'
+import { Conversations } from 'pages/Conversations'
 import { HomePage } from 'pages/Home'
 import { NotFoundPage } from 'pages/NotFound'
 import { createBrowserRouter } from 'react-router-dom'
@@ -14,7 +15,7 @@ export const router = createBrowserRouter([
         children: [
           {
             path: '/conversations',
-            element: <h1>Hello World</h1>
+            element: <Conversations />
           }
         ]
       },
