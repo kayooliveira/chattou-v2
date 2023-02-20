@@ -1,4 +1,4 @@
-import { MagnifyingGlass, UserCircleGear } from 'phosphor-react'
+import { MagnifyingGlass, UserSwitch } from 'phosphor-react'
 import { ChangeEvent, FormEvent, useState } from 'react'
 import { useAuthStore } from 'store/auth'
 
@@ -23,8 +23,11 @@ export function SidebarHeader() {
     <header className="flex flex-col gap-6 text-chattou-textDarker">
       <div className="flex w-full items-center justify-between">
         <span className="text-xl font-bold">Messages</span>
-        <button onClick={signOut} className="focus-default rounded-full">
-          <UserCircleGear size={32} />
+        <button
+          onClick={signOut}
+          className="focus-default rounded-full transition-all duration-300 hover:rotate-[360deg] hover:text-chattou-text"
+        >
+          <UserSwitch size={32} />
         </button>
       </div>
       <form
