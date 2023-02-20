@@ -16,21 +16,26 @@ export function HomePage() {
   const locationState = location.state
 
   const setUser = useAuthStore(state => state.setUser)
-  onAuthStateChanged(auth, user => {
-    if (user && !isAuthenticated) {
-      const { uid, displayName: name, photoURL: avatar } = user
 
-      if (name && avatar) {
-        const userData: User = {
-          uid,
-          name,
-          avatar,
-          username: ''
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, user => {
+      if (user && !isAuthenticated) {
+        const { uid, displayName: name, photoURL: avatar } = user
+
+        if (name && avatar) {
+          const userData: User = {
+            uid,
+            name,
+            avatar,
+            username: ''
+          }
+          setUser(userData)
         }
-        setUser(userData)
       }
-    }
-  })
+    })
+
+    return () => unsub()
+  }, [])
 
   useEffect(() => {
     if (locationState && locationState.notify) {
