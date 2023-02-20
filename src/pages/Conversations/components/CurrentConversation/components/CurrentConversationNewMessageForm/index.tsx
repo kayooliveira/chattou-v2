@@ -4,7 +4,7 @@ import EmojiPicker, {
   EmojiStyle,
   Theme
 } from 'emoji-picker-react'
-import { PaperPlaneRight } from 'phosphor-react'
+import { PaperPlaneRight, Smiley } from 'phosphor-react'
 import { FormEvent, useState, ChangeEvent, KeyboardEvent, useRef } from 'react'
 import ReactTextareaAutosize from 'react-textarea-autosize'
 
@@ -16,6 +16,9 @@ export function CurrentConversationNewMessageForm() {
 
   function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
+    if (showEmoji) {
+      setShowEmoji(false)
+    }
   }
 
   function toggleShowEmoji() {
@@ -24,39 +27,53 @@ export function CurrentConversationNewMessageForm() {
 
   function handleAddEmoji(emoji: EmojiClickData) {
     setCurrentMessage(state => state + emoji.emoji)
+    textareaRef.current?.focus()
   }
 
   function handleChangeMessage(e: ChangeEvent<HTMLTextAreaElement>) {
     setCurrentMessage(e.target.value)
+    if (showEmoji) {
+      setShowEmoji(false)
+    }
   }
 
   function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>): void {
     if (e.key === 'Enter' && !e.shiftKey && formRef.current) {
       e.preventDefault()
       formRef.current.requestSubmit()
+      if (showEmoji) {
+        setShowEmoji(false)
+      }
     }
   }
 
   return (
     <form
       ref={formRef}
-      className="mt-2 flex w-full items-center justify-center rounded-full bg-chattou-backgroundLight p-1  focus-within:ring-1 focus-within:ring-chattou-secondary/50 focus-within:ring-offset-1 focus-within:ring-offset-transparent"
+      className="relative mt-2  flex w-full items-center justify-center rounded-full bg-chattou-backgroundLight p-1 text-chattou-textDarker  focus-within:ring-1 focus-within:ring-chattou-secondary/50 focus-within:ring-offset-1 focus-within:ring-offset-transparent"
       onSubmit={handleSubmit}
     >
-      <button onClick={toggleShowEmoji}>
+      <button
+        type="button"
+        className="rounded-full p-2 text-chattou-primary outline-none transition-colors focus:bg-chattou-primary focus:text-chattou-secondary hover:bg-chattou-primary hover:text-chattou-secondary"
+        onClick={toggleShowEmoji}
+      >
+        <Smiley weight="fill" size={24} />
         {showEmoji && (
-          <EmojiPicker
-            height="350px"
-            lazyLoadEmojis
-            emojiStyle={EmojiStyle.NATIVE}
-            onEmojiClick={handleAddEmoji}
-            theme={Theme.DARK}
-            searchPlaceHolder="Buscar"
-            previewConfig={{
-              showPreview: false
-            }}
-            searchDisabled={true}
-          />
+          <span className="absolute left-0 bottom-16">
+            <EmojiPicker
+              height="350px"
+              lazyLoadEmojis
+              emojiStyle={EmojiStyle.NATIVE}
+              onEmojiClick={handleAddEmoji}
+              theme={Theme.DARK}
+              searchPlaceHolder="Buscar"
+              previewConfig={{
+                showPreview: false
+              }}
+              searchDisabled={true}
+            />
+          </span>
         )}
       </button>
       <ReactTextareaAutosize
