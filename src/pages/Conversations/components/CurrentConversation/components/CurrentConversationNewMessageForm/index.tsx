@@ -86,7 +86,7 @@ export function CurrentConversationNewMessageForm() {
         value={currentMessage}
         onChange={handleChangeMessage}
         className="block max-h-14 flex-1 resize-none border-none bg-transparent px-4 text-chattou-primary outline-none scrollbar-thin scrollbar-track-chattou-background scrollbar-thumb-chattou-primary scrollbar-track-rounded-full scrollbar-thumb-rounded-full placeholder:text-chattou-primary"
-        placeholder="Digite sua mensagem!"
+        placeholder="Message"
       />
       <button className="-rotate-45 rounded-full p-2 text-chattou-primary outline-none transition-colors focus:bg-chattou-primary focus:text-chattou-secondary hover:bg-chattou-primary hover:text-chattou-secondary">
         <PaperPlaneRight weight="fill" size="24" />
