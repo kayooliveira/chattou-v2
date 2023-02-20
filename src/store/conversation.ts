@@ -1,4 +1,8 @@
+import { doc, getDoc, orderBy, query, where } from 'firebase/firestore'
+// eslint-disable-next-line import/named
+import { collection, onSnapshot, Unsubscribe } from 'firebase/firestore'
 import { produce } from 'immer'
+import { database } from 'lib/firebase'
 import { create } from 'zustand'
 
 import { User } from './auth'
@@ -11,6 +15,15 @@ export interface Conversation {
   name: string
   unreadMessagesQnt: number
   with: User
+}
+
+export interface Message {
+  id: string
+  body: string
+  isRead: boolean
+  sender: string
+  time: Date
+  type: 'text'
 }
 
 export const CONVERSATION_INITIAL_DATA: Conversation = {
@@ -30,26 +43,125 @@ export const CONVERSATION_INITIAL_DATA: Conversation = {
 
 interface State {
   currentConversation: string
+  currentConversationUser: string
   showCurrentConversation: boolean
-  setCurrentConversation: (uid: string) => void
+  recentUsers: User[]
+  recentConversationsIds: string[]
+  setCurrentConversation: (
+    conversationId: string,
+    userId: string
+  ) => Promise<void>
+  getCurrentConversationUser: (
+    userId: string,
+    onConversationChange: (newUser: User) => void
+  ) => Unsubscribe
+  getCurrentConversationMessages: (
+    onMessageChange: (newMessage: Message) => void
+  ) => Unsubscribe
   closeCurrentConversation: () => void
   openCurrentConversation: () => void
   toggleCurrentConversation: () => void
+  getRecentUsers: () => Unsubscribe
+  getRecentConversationsIds: (userId: string) => Unsubscribe
+  getConversationData: (
+    conversationId: string,
+    userId: string,
+    onConversationChange: (newConversation: Conversation) => void
+  ) => Unsubscribe
 }
 
-export const useConversationStore = create<State>(setState => ({
+export const useConversationStore = create<State>((setState, getState) => ({
   currentConversation: '',
+  currentConversationUser: '',
   showCurrentConversation: true,
-  setCurrentConversation: uid => {
+  recentUsers: [],
+  recentConversationsIds: [],
+  setCurrentConversation: async (conversationId, userId) => {
     try {
+      const cDoc = doc(database, 'conversations', conversationId)
+      const currentConversationUserId = await getDoc(cDoc).then(
+        conversationDoc => {
+          if (conversationDoc.exists()) {
+            const conversationData = conversationDoc.data()
+            if (conversationData) {
+              const user2Id = conversationData.users.find(
+                (u: string) => u !== userId
+              )
+              if (user2Id) return user2Id
+            }
+          }
+        }
+      )
+
       setState(
         produce<State>(state => {
-          state.currentConversation = uid
+          state.currentConversation = conversationId
+          state.currentConversationUser = currentConversationUserId
           state.showCurrentConversation = true
         })
       )
     } catch (error) {
       console.error(error)
+    }
+  },
+  getCurrentConversationUser: (userId, onUserChange) => {
+    try {
+      const actualState = getState()
+      const currentConversationUserId = actualState.currentConversationUser
+
+      const uDoc = doc(database, 'users', currentConversationUserId)
+      const unsub = onSnapshot(uDoc, userDoc => {
+        if (userDoc.exists()) {
+          const user2Data = userDoc.data()
+          if (user2Data) {
+            const newUser: User = {
+              avatar: user2Data.avatar,
+              name: user2Data.name,
+              uid: user2Data.uid,
+              username: user2Data.username
+            }
+            onUserChange(newUser)
+          }
+        }
+      })
+
+      return unsub
+    } catch (error) {
+      console.error(error)
+      return () => null
+    }
+  },
+  getCurrentConversationMessages: onMessagesChange => {
+    try {
+      const actualState = getState()
+      const currentConversationId = actualState.currentConversation
+      const messagesCol = collection(
+        database,
+        `conversations/${currentConversationId}/messages`
+      )
+      const messagesQuery = query(messagesCol, orderBy('time', 'asc'))
+      const unsub = onSnapshot(messagesQuery, messagesSnap => {
+        messagesSnap.forEach(messageDoc => {
+          if (messageDoc.exists()) {
+            const messageData = messageDoc.data()
+            if (messageData) {
+              const newMessage = {
+                id: messageDoc.id,
+                body: messageData.body,
+                isRead: messageData.isRead,
+                sender: messageData.sender,
+                time: new Date(messageData.time.seconds * 1000),
+                type: messageData.type
+              }
+              onMessagesChange(newMessage)
+            }
+          }
+        })
+      })
+      return unsub
+    } catch (error) {
+      console.error(error)
+      return () => null
     }
   },
   closeCurrentConversation: () => {
@@ -83,6 +195,125 @@ export const useConversationStore = create<State>(setState => ({
       )
     } catch (error) {
       console.error(error)
+    }
+  },
+  getRecentUsers: () => {
+    try {
+      const usersDoc = collection(database, 'users')
+      const unsub = onSnapshot(usersDoc, usersSnapshot => {
+        if (usersSnapshot.empty) return
+        usersSnapshot.forEach(userDoc => {
+          if (userDoc.exists()) {
+            const userDocData = userDoc.data()
+            if (userDocData) {
+              const userData: User = {
+                uid: userDocData.uid, // ! REMOVER O CÓDIGO "|| userDocData.id" após lançar a v2!
+                name: userDocData.name,
+                avatar: userDocData.avatar,
+                username: userDocData.username
+              }
+              setState(
+                produce<State>(state => {
+                  const userExists = state.recentUsers.find(
+                    stateUser => stateUser.uid === userData.uid
+                  )
+
+                  if (userExists) {
+                    const newState = state.recentUsers.filter(
+                      stateUser => stateUser.uid !== userData.uid
+                    )
+                    state.recentUsers = [...newState, userData]
+                    return
+                  }
+
+                  state.recentUsers = [...state.recentUsers, userData]
+                })
+              )
+            }
+          }
+        })
+      })
+
+      return unsub
+    } catch (error) {
+      console.error(error)
+      return () => null
+    }
+  },
+  getRecentConversationsIds: userId => {
+    try {
+      const conversationsCol = collection(database, 'conversations')
+      const conversationsQuery = query(
+        conversationsCol,
+        where('users', 'array-contains', userId)
+      )
+      const unsub = onSnapshot(conversationsQuery, conversationsSnap => {
+        conversationsSnap.forEach(conversationDoc => {
+          if (conversationDoc.exists()) {
+            if (conversationDoc.data()) {
+              setState(
+                produce<State>(state => {
+                  if (
+                    state.recentConversationsIds.includes(conversationDoc.id)
+                  ) {
+                    return
+                  }
+
+                  state.recentConversationsIds = [
+                    ...state.recentConversationsIds,
+                    conversationDoc.id
+                  ]
+                })
+              )
+            }
+          }
+        })
+      })
+
+      return unsub
+    } catch (error) {
+      console.error(error)
+      return () => null
+    }
+  },
+  getConversationData: (conversationId, userId, onConversationChange) => {
+    try {
+      const cDoc = doc(database, 'conversations', conversationId)
+      const unsub = onSnapshot(cDoc, async conversationDoc => {
+        if (conversationDoc.exists()) {
+          const conversationData = conversationDoc.data()
+          if (conversationData) {
+            const user2Id = conversationData.users.find(
+              (u: string) => u !== userId
+            )
+            const userDoc = doc(database, 'users', user2Id)
+            const user2Data = await getDoc(userDoc).then(userDoc => {
+              if (userDoc.exists()) {
+                if (userDoc.data()) return userDoc.data()
+              }
+            })
+            if (user2Data) {
+              const newConversation = {
+                id: conversationDoc.id,
+                image: user2Data.avatar,
+                lastMessage: conversationData.lastMessage,
+                lastMessageDate: new Date(
+                  conversationData.lastMessageDate.seconds * 1000
+                ),
+                name: user2Data.name,
+                unreadMessagesQnt: conversationData.unreadMessagesQnt,
+                with: user2Data as User
+              }
+              onConversationChange(newConversation)
+            }
+          }
+        }
+      })
+
+      return unsub
+    } catch (error) {
+      console.error(error)
+      return () => null
     }
   }
 }))

@@ -1,18 +1,7 @@
-import { collection, onSnapshot, orderBy, query } from 'firebase/firestore'
-import { database } from 'lib/firebase'
 import { useEffect, useRef, useState } from 'react'
-import { useConversationStore } from 'store/conversation'
+import { Message, useConversationStore } from 'store/conversation'
 
 import { CurrentConversationMessageBubble } from './components/CurrentConversationMessageBubble'
-
-interface Message {
-  id: string
-  body: string
-  isRead: boolean
-  sender: string
-  time: Date
-  type: 'text'
-}
 
 export function CurrentConversationMessages() {
   const [messages, setMessages] = useState<Message[]>([])
@@ -21,43 +10,32 @@ export function CurrentConversationMessages() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
+  const getCurrentConversationMessages = useConversationStore(
+    state => state.getCurrentConversationMessages
+  )
+
   function scrollToNewestMessage() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  useEffect(() => {
-    const messagesCol = collection(database, `conversations/${uid}/messages`)
-    const messagesQuery = query(messagesCol, orderBy('time', 'asc'))
-    const unsub = onSnapshot(messagesQuery, messagesSnap => {
-      messagesSnap.forEach(messageDoc => {
-        if (messageDoc.exists()) {
-          const messageData = messageDoc.data()
-          if (messageData) {
-            const newMessage = {
-              id: messageDoc.id,
-              body: messageData.body,
-              isRead: messageData.isRead,
-              sender: messageData.sender,
-              time: new Date(messageData.time.seconds * 1000),
-              type: messageData.type
-            }
-            setMessages(state => {
-              const messageExists = state.find(m => m.id === newMessage.id)
-              if (messageExists) {
-                return state.map(m => {
-                  if (m.id === newMessage.id) {
-                    return newMessage
-                  }
-                  return m
-                })
-              }
-              return [...state, newMessage]
-            })
-            scrollToNewestMessage()
+  function onMessagesChange(message: Message) {
+    setMessages(state => {
+      const messageExists = state.find(m => m.id === message.id)
+      if (messageExists) {
+        return state.map(m => {
+          if (m.id === message.id) {
+            return message
           }
-        }
-      })
+          return m
+        })
+      }
+      return [...state, message]
     })
+    scrollToNewestMessage()
+  }
+
+  useEffect(() => {
+    const unsub = getCurrentConversationMessages(onMessagesChange)
     return () => unsub()
   }, [uid])
 

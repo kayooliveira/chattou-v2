@@ -1,8 +1,6 @@
 import { format } from 'date-fns'
-import { doc, getDoc, onSnapshot } from 'firebase/firestore'
-import { database } from 'lib/firebase'
 import { useEffect, useState } from 'react'
-import { useAuthStore, User } from 'store/auth'
+import { useAuthStore } from 'store/auth'
 import {
   Conversation,
   CONVERSATION_INITIAL_DATA,
@@ -17,6 +15,9 @@ export function RecentConversationsCard({ uid }: RecentConversationsCardProps) {
   const [conversation, setConversation] = useState<Conversation>(
     CONVERSATION_INITIAL_DATA
   )
+  const getConversationData = useConversationStore(
+    state => state.getConversationData
+  )
 
   const user = useAuthStore(state => state.user)
 
@@ -25,38 +26,7 @@ export function RecentConversationsCard({ uid }: RecentConversationsCardProps) {
   )
 
   useEffect(() => {
-    const cDoc = doc(database, 'conversations', uid)
-    const unsub = onSnapshot(cDoc, async conversationDoc => {
-      if (conversationDoc.exists()) {
-        const conversationData = conversationDoc.data()
-        if (conversationData) {
-          const user2Id = conversationData.users.find(
-            (u: string) => u !== user.uid
-          )
-          const userDoc = doc(database, 'users', user2Id)
-          const user2Data = await getDoc(userDoc).then(userDoc => {
-            if (userDoc.exists()) {
-              if (userDoc.data()) return userDoc.data()
-            }
-          })
-          if (user2Data) {
-            const newConversation = {
-              id: conversationDoc.id,
-              image: user2Data.avatar,
-              lastMessage: conversationData.lastMessage,
-              lastMessageDate: new Date(
-                conversationData.lastMessageDate.seconds * 1000
-              ),
-              name: user2Data.name,
-              unreadMessagesQnt: conversationData.unreadMessagesQnt,
-              with: user2Data as User
-            }
-            setConversation(newConversation)
-          }
-        }
-      }
-    })
-
+    const unsub = getConversationData(uid, user.uid, setConversation)
     return () => unsub()
   }, [])
 
@@ -65,7 +35,7 @@ export function RecentConversationsCard({ uid }: RecentConversationsCardProps) {
   }
 
   function handleClickConversation() {
-    setCurrentConversation(uid)
+    setCurrentConversation(uid, user.uid)
   }
 
   return (

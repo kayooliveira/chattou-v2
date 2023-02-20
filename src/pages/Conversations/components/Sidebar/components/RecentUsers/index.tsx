@@ -1,44 +1,14 @@
-import { collection, onSnapshot } from 'firebase/firestore'
-import { database } from 'lib/firebase'
-import { useEffect, useState } from 'react'
-import { User } from 'store/auth'
+import { useEffect } from 'react'
+import { useConversationStore } from 'store/conversation'
 
 import { RecentUsersCard } from './components/RecentUsersCard'
 
 export function RecentUsers() {
-  const [recentUsers, setRecentUsers] = useState<User[]>([])
+  const recentUsers = useConversationStore(state => state.recentUsers)
+  const getRecentUsers = useConversationStore(state => state.getRecentUsers)
 
   useEffect(() => {
-    const usersDoc = collection(database, 'users')
-    const unsub = onSnapshot(usersDoc, usersSnapshot => {
-      if (usersSnapshot.empty) return
-      usersSnapshot.forEach(userDoc => {
-        if (userDoc.exists()) {
-          const userDocData = userDoc.data()
-          if (userDocData) {
-            const userData: User = {
-              uid: userDocData.uid, // ! REMOVER O CÓDIGO "|| userDocData.id" após lançar a v2!
-              name: userDocData.name,
-              avatar: userDocData.avatar,
-              username: userDocData.username
-            }
-            setRecentUsers(state => {
-              const userExists = state.find(
-                stateUser => stateUser.uid === userData.uid
-              )
-              if (userExists) {
-                const newState = state.filter(
-                  stateUser => stateUser.uid !== userData.uid
-                )
-                return [...newState, userData]
-              }
-              return [...state, userData]
-            })
-          }
-        }
-      })
-    })
-
+    const unsub = getRecentUsers()
     return () => unsub()
   }, [])
 

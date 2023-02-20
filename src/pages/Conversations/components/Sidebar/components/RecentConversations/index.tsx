@@ -1,36 +1,21 @@
-import { collection, onSnapshot, query, where } from 'firebase/firestore'
-import { database } from 'lib/firebase'
 import { Clock } from 'phosphor-react'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { useAuthStore } from 'store/auth'
+import { useConversationStore } from 'store/conversation'
 
 import { RecentConversationsCard } from './components/RecentConversationsCard'
 
 export function RecentConversations() {
-  const [recentConversationIds, setRecentConversationIds] = useState<string[]>(
-    []
+  const recentConversationsIds = useConversationStore(
+    state => state.recentConversationsIds
+  )
+  const getRecentConversationsIds = useConversationStore(
+    state => state.getRecentConversationsIds
   )
   const user = useAuthStore(state => state.user)
 
   useEffect(() => {
-    const conversationsCol = collection(database, 'conversations')
-    const conversationsQuery = query(
-      conversationsCol,
-      where('users', 'array-contains', user.uid)
-    )
-    const unsub = onSnapshot(conversationsQuery, conversationsSnap => {
-      conversationsSnap.forEach(conversationDoc => {
-        if (conversationDoc.exists()) {
-          if (conversationDoc.data()) {
-            setRecentConversationIds(state => {
-              if (state.includes(conversationDoc.id)) return state
-              return [...state, conversationDoc.id]
-            })
-          }
-        }
-      })
-    })
-
+    const unsub = getRecentConversationsIds(user.uid)
     return () => unsub()
   }, [])
 
@@ -44,7 +29,7 @@ export function RecentConversations() {
         tabIndex={1}
         className="scrollbar-chattou flex flex-1 basis-1 flex-col gap-2 overflow-x-scroll p-1 outline-none"
       >
-        {recentConversationIds.map(recentConversationId => {
+        {recentConversationsIds.map(recentConversationId => {
           return (
             <RecentConversationsCard
               key={recentConversationId}
