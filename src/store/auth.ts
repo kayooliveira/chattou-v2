@@ -11,7 +11,7 @@ export interface User {
   avatar: string
 }
 
-const USER_INITIAL_STATE: User = {
+export const USER_INITIAL_STATE: User = {
   uid: '',
   name: '',
   username: '',
