@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useAuthStore } from 'store/auth'
 import { Message, useConversationStore } from 'store/conversation'
 
 import { CurrentConversationMessageBubble } from './components/CurrentConversationMessageBubble'
@@ -7,11 +8,15 @@ export function CurrentConversationMessages() {
   const [messages, setMessages] = useState<Message[]>([])
 
   const uid = useConversationStore(state => state.currentConversation)
-
+  const user = useAuthStore(state => state.user)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const getCurrentConversationMessages = useConversationStore(
     state => state.getCurrentConversationMessages
+  )
+
+  const setConversationMessagesReadByUser = useConversationStore(
+    state => state.setConversationMessagesReadByUser
   )
 
   function scrollToNewestMessage() {
@@ -35,8 +40,15 @@ export function CurrentConversationMessages() {
   }
 
   useEffect(() => {
+    let isSubscribed = true
     const unsub = getCurrentConversationMessages(onMessagesChange)
-    return () => unsub()
+    if (isSubscribed) {
+      setConversationMessagesReadByUser(user.uid, uid)
+    }
+    return () => {
+      isSubscribed = false
+      unsub()
+    }
   }, [uid])
 
   useEffect(() => {
