@@ -307,7 +307,7 @@ export const useConversationStore = create<State>((setState, getState) => ({
             const userDocData = userDoc.data()
             if (userDocData) {
               const userData: User = {
-                uid: userDocData.uid, // ! REMOVER O CÓDIGO "|| userDocData.id" após lançar a v2!
+                uid: userDocData.uid,
                 name: userDocData.name,
                 avatar: userDocData.avatar,
                 username: userDocData.username
