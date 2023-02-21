@@ -35,7 +35,7 @@ export interface Message {
   isRead: boolean
   sender: string
   time: Date
-  type: 'text'
+  type: 'text' | 'audio'
 }
 
 export const CONVERSATION_INITIAL_DATA: Conversation = {
@@ -64,7 +64,6 @@ interface State {
     userId: string
   ) => Promise<void>
   getCurrentConversationUser: (
-    userId: string,
     onConversationChange: (newUser: User) => void
   ) => Unsubscribe
   getCurrentConversationMessages: (
@@ -72,6 +71,10 @@ interface State {
   ) => Unsubscribe
   addMessageToCurrentConversation: (
     message: Omit<Message, 'id'>
+  ) => Promise<void>
+  createNewEmptyConversation: (
+    user1Id: string,
+    user2Id: string
   ) => Promise<void>
   closeCurrentConversation: () => void
   openCurrentConversation: () => void
@@ -123,7 +126,7 @@ export const useConversationStore = create<State>((setState, getState) => ({
       console.error(error)
     }
   },
-  getCurrentConversationUser: (userId, onUserChange) => {
+  getCurrentConversationUser: onUserChange => {
     try {
       const actualState = getState()
       const currentConversationUserId = actualState.currentConversationUser
@@ -194,13 +197,67 @@ export const useConversationStore = create<State>((setState, getState) => ({
       )
       await updateDoc(conversationDoc, {
         lastMessage: message.body,
-        lastMessageData: message.time
+        lastMessageDate: message.time
       })
       const messagesRef = collection(
         database,
         `conversations/${currentConversationId}/messages`
       )
       await addDoc(messagesRef, message)
+    } catch (error) {
+      console.error(error)
+    }
+  },
+  createNewEmptyConversation: async (user1Id, user2Id) => {
+    try {
+      const conversationCol = collection(database, 'conversations')
+
+      const conversationExistsQuery = query(
+        conversationCol,
+        where('users', 'array-contains', user1Id || user2Id)
+      )
+      const conversationExists = await getDocs(conversationExistsQuery).then(
+        conversationDocs => {
+          let conversationId = ''
+          conversationDocs.forEach(conversationDoc => {
+            if (conversationDoc.exists()) {
+              const conversationData = conversationDoc.data()
+              if (conversationData) {
+                if (conversationData.users.includes(user2Id)) {
+                  conversationId = conversationDoc.id
+                }
+              }
+            }
+          })
+          return conversationId
+        }
+      )
+
+      if (conversationExists) {
+        setState(
+          produce<State>(state => {
+            state.currentConversation = conversationExists
+            state.currentConversationUser = user2Id
+            state.showCurrentConversation = true
+          })
+        )
+        return
+      }
+
+      const conversationDoc = await addDoc(conversationCol, {
+        users: [user1Id, user2Id],
+        lastMessageDate: null,
+        lastMessage: ''
+      })
+      if (conversationDoc.id) {
+        setState(
+          produce<State>(state => {
+            state.currentConversation = conversationDoc.id
+            state.currentConversationUser = user2Id
+            state.showCurrentConversation = true
+          })
+        )
+      }
     } catch (error) {
       console.error(error)
     }
@@ -291,7 +348,7 @@ export const useConversationStore = create<State>((setState, getState) => ({
       const unsub = onSnapshot(conversationsQuery, conversationsSnap => {
         conversationsSnap.forEach(conversationDoc => {
           if (conversationDoc.exists()) {
-            if (conversationDoc.data()) {
+            if (conversationDoc.data() && conversationDoc.data().lastMessage) {
               setState(
                 produce<State>(state => {
                   if (
@@ -358,7 +415,6 @@ export const useConversationStore = create<State>((setState, getState) => ({
                   return unreadMessagesQnt
                 }
               )
-              console.log(unreadMessages)
 
               const newConversation = {
                 id: conversationDoc.id,
