@@ -42,7 +42,7 @@ export function RecentConversationsCard({ uid }: RecentConversationsCardProps) {
     <div
       tabIndex={0}
       onClick={handleClickConversation}
-      className="focus-default flex w-full cursor-pointer items-center justify-between rounded-lg border border-transparent bg-chattou-backgroundLight p-2 text-chattou-text transition-all hover:border-chattou-secondary/50"
+      className="focus-default flex w-full cursor-pointer items-center justify-between gap-4 rounded-lg border border-transparent bg-chattou-backgroundLight p-2 text-chattou-text transition-all hover:border-chattou-secondary/50"
     >
       <div className="flex w-full items-center justify-start gap-4">
         <img
@@ -52,17 +52,23 @@ export function RecentConversationsCard({ uid }: RecentConversationsCardProps) {
           referrerPolicy="no-referrer"
         />
         <div className="flex flex-col items-start justify-center gap-2">
-          <span className="text-xl font-bold">{conversation.with.name}</span>
-          <span className="text-xs text-chattou-textDark">
+          <span className="max-w-[25ch] truncate text-xl font-bold">
+            {conversation.with.name}
+          </span>
+          <span className="max-w-[25ch] truncate text-xs text-chattou-textDarker">
             {conversation.lastMessage}
           </span>
         </div>
       </div>
       <div className="flex flex-col items-end justify-center gap-1">
-        <span>{formatConversationDate(conversation.lastMessageDate)}</span>
+        <span className="text-xs text-chattou-textDarker">
+          {formatConversationDate(conversation.lastMessageDate)}
+        </span>
         {conversation.unreadMessagesQnt > 0 && (
-          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-chattou-primary text-xs font-bold ">
-            {conversation.unreadMessagesQnt}
+          <span className="flex h-5 w-5 items-center justify-center rounded-full bg-chattou-primary text-xs font-bold ">
+            {conversation.unreadMessagesQnt >= 100
+              ? '99+'
+              : conversation.unreadMessagesQnt}
           </span>
         )}
       </div>
