@@ -345,29 +345,23 @@ export const useConversationStore = create<State>((setState, getState) => ({
       const conversationsCol = collection(database, 'conversations')
       const conversationsQuery = query(
         conversationsCol,
-        where('users', 'array-contains', userId)
+        where('users', 'array-contains', userId),
+        orderBy('lastMessageDate', 'desc')
       )
       const unsub = onSnapshot(conversationsQuery, conversationsSnap => {
+        const newConversationIds: string[] = []
         conversationsSnap.forEach(conversationDoc => {
           if (conversationDoc.exists()) {
             if (conversationDoc.data() && conversationDoc.data().lastMessage) {
-              setState(
-                produce<State>(state => {
-                  if (
-                    state.recentConversationsIds.includes(conversationDoc.id)
-                  ) {
-                    return
-                  }
-
-                  state.recentConversationsIds = [
-                    ...state.recentConversationsIds,
-                    conversationDoc.id
-                  ]
-                })
-              )
+              newConversationIds.push(conversationDoc.id)
             }
           }
         })
+        setState(
+          produce<State>(state => {
+            state.recentConversationsIds = newConversationIds
+          })
+        )
       })
 
       return unsub
