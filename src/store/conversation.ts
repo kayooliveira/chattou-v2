@@ -7,7 +7,10 @@ import {
   collection,
   onSnapshot,
   // eslint-disable-next-line import/named
-  Unsubscribe
+  Unsubscribe,
+  updateDoc,
+  addDoc,
+  getDocs
 } from 'firebase/firestore'
 // eslint-disable-next-line import/named
 import { produce } from 'immer'
@@ -67,6 +70,9 @@ interface State {
   getCurrentConversationMessages: (
     onMessageChange: (newMessage: Message) => void
   ) => Unsubscribe
+  addMessageToCurrentConversation: (
+    message: Omit<Message, 'id'>
+  ) => Promise<void>
   closeCurrentConversation: () => void
   openCurrentConversation: () => void
   toggleCurrentConversation: () => void
@@ -77,6 +83,10 @@ interface State {
     userId: string,
     onConversationChange: (newConversation: Conversation) => void
   ) => Unsubscribe
+  setConversationMessagesReadByUser: (
+    userId: string,
+    conversationId?: string
+  ) => Promise<void>
 }
 
 export const useConversationStore = create<State>((setState, getState) => ({
@@ -171,6 +181,28 @@ export const useConversationStore = create<State>((setState, getState) => ({
     } catch (error) {
       console.error(error)
       return () => null
+    }
+  },
+  addMessageToCurrentConversation: async message => {
+    try {
+      const actualState = getState()
+      const currentConversationId = actualState.currentConversation
+      const conversationDoc = doc(
+        database,
+        'conversations',
+        currentConversationId
+      )
+      await updateDoc(conversationDoc, {
+        lastMessage: message.body,
+        lastMessageData: message.time
+      })
+      const messagesRef = collection(
+        database,
+        `conversations/${currentConversationId}/messages`
+      )
+      await addDoc(messagesRef, message)
+    } catch (error) {
+      console.error(error)
     }
   },
   closeCurrentConversation: () => {
@@ -302,6 +334,32 @@ export const useConversationStore = create<State>((setState, getState) => ({
               }
             })
             if (user2Data) {
+              const messagesCol = collection(
+                database,
+                `conversations/${conversationDoc.id}/messages`
+              )
+              const messagesQuery = query(
+                messagesCol,
+                where('isRead', '==', false)
+              )
+
+              const unreadMessages = await getDocs(messagesQuery).then(
+                messagesDocs => {
+                  let unreadMessagesQnt = 0
+                  messagesDocs.forEach(messageDoc => {
+                    if (messageDoc.exists()) {
+                      if (messageDoc.data()) {
+                        if (messageDoc.data().sender === user2Id) {
+                          unreadMessagesQnt += 1
+                        }
+                      }
+                    }
+                  })
+                  return unreadMessagesQnt
+                }
+              )
+              console.log(unreadMessages)
+
               const newConversation = {
                 id: conversationDoc.id,
                 image: user2Data.avatar,
@@ -310,7 +368,7 @@ export const useConversationStore = create<State>((setState, getState) => ({
                   conversationData.lastMessageDate.seconds * 1000
                 ),
                 name: user2Data.name,
-                unreadMessagesQnt: conversationData.unreadMessagesQnt,
+                unreadMessagesQnt: unreadMessages,
                 with: user2Data as User
               }
               onConversationChange(newConversation)
@@ -323,6 +381,44 @@ export const useConversationStore = create<State>((setState, getState) => ({
     } catch (error) {
       console.error(error)
       return () => null
+    }
+  },
+  setConversationMessagesReadByUser: async (userId, conversation) => {
+    try {
+      const actualState = getState()
+      const currentConversationId = actualState.currentConversation
+      const conversationId = conversation || currentConversationId
+      const conversationDoc = doc(database, 'conversations', conversationId)
+      await updateDoc(conversationDoc, {
+        lastMessageReadTime: new Date()
+      })
+      const messagesCol = collection(
+        database,
+        `conversations/${conversationId}/messages`
+      )
+      const messagesQuery = query(messagesCol, where('sender', '!=', userId))
+      const messagesIds = await getDocs(messagesQuery).then(messagesDoc => {
+        const ids: string[] = []
+        messagesDoc.forEach(messageDoc => {
+          if (messageDoc.exists()) {
+            ids.push(messageDoc.id)
+          }
+        })
+        return ids
+      })
+
+      messagesIds.forEach(async messageId => {
+        const messageDoc = doc(
+          database,
+          `conversations/${conversationId}/messages`,
+          messageId
+        )
+        await updateDoc(messageDoc, {
+          isRead: true
+        })
+      })
+    } catch (error) {
+      console.error(error)
     }
   }
 }))
