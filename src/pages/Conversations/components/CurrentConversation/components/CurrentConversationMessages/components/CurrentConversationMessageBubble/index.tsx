@@ -7,7 +7,7 @@ interface CurrentConversationMessageBubbleProps {
   time: Date
   senderId: string
   isRead: boolean
-  type: 'text'
+  type: 'text' | 'audio'
 }
 
 type MessageActionType = 'in' | 'out'
