@@ -23,7 +23,7 @@ export function CurrentConversation() {
   }
 
   return (
-    <AnimatePresence onExitComplete={() => console.log('FECHO MEU PATRÃO')}>
+    <AnimatePresence>
       {currentConversation && showCurrentConversation && (
         <motion.div
           initial={{ opacity: 0.5, x: 1000 }}
