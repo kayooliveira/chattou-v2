@@ -1,3 +1,6 @@
+import { useAuthStore } from 'store/auth'
+import { useConversationStore } from 'store/conversation'
+
 interface RecentUsersCardProps {
   name: string
   avatar: string
@@ -5,8 +8,14 @@ interface RecentUsersCardProps {
 }
 
 export function RecentUsersCard({ name, avatar, uid }: RecentUsersCardProps) {
+  const user = useAuthStore(state => state.user)
+
+  const createNewEmptyConversation = useConversationStore(
+    state => state.createNewEmptyConversation
+  )
+
   function handleClickUser() {
-    console.log(uid)
+    createNewEmptyConversation(user.uid, uid)
   }
 
   return (
