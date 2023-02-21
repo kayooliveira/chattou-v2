@@ -7,6 +7,7 @@
   - User authentication with Firebase Authentication.
   - Chat data storage with Firebase Firestore.
   - Responsive UI design with TailwindCSS.
+  - Zustand to manage states.
 
 ### Getting Started
 
