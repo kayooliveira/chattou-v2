@@ -1,6 +1,6 @@
 import { XCircle } from 'phosphor-react'
 import { useEffect, useState } from 'react'
-import { useAuthStore, User, USER_INITIAL_STATE } from 'store/auth'
+import { User, USER_INITIAL_STATE } from 'store/auth'
 import { useConversationStore } from 'store/conversation'
 interface CurrentConversationHeaderProps {
   onClose: () => void
@@ -15,13 +15,8 @@ export function CurrentConversationHeader({
     state => state.getCurrentConversationUser
   )
 
-  const user = useAuthStore(state => state.user)
-
   useEffect(() => {
-    const unsub = getCurrentConversationUser(
-      user.uid,
-      setCurrentConversationUser
-    )
+    const unsub = getCurrentConversationUser(setCurrentConversationUser)
     return () => unsub()
   }, [])
 
