@@ -112,12 +112,13 @@ export function CurrentConversationNewMessageForm() {
         onClick={toggleShowEmoji}
       >
         <Smiley weight="fill" size={24} />
-        {showEmoji && (
-          <span className="absolute left-0 bottom-16">
-            {EmojiPickerContainer}
-          </span>
-        )}
       </button>
+
+      {showEmoji && (
+        <span className="absolute left-0 bottom-16">
+          {EmojiPickerContainer}
+        </span>
+      )}
       <ReactTextareaAutosize
         ref={textareaRef}
         name="message"
