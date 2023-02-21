@@ -5,19 +5,43 @@ import EmojiPicker, {
   Theme
 } from 'emoji-picker-react'
 import { PaperPlaneRight, Smiley } from 'phosphor-react'
-import { FormEvent, useState, ChangeEvent, KeyboardEvent, useRef } from 'react'
+import {
+  FormEvent,
+  useState,
+  ChangeEvent,
+  KeyboardEvent,
+  useRef,
+  useMemo
+} from 'react'
 import ReactTextareaAutosize from 'react-textarea-autosize'
+import { useAuthStore } from 'store/auth'
+import { useConversationStore } from 'store/conversation'
 
 export function CurrentConversationNewMessageForm() {
   const [showEmoji, setShowEmoji] = useState<boolean>(false)
   const [currentMessage, setCurrentMessage] = useState<string>('')
   const formRef = useRef<HTMLFormElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
+  const user = useAuthStore(state => state.user)
+  const addMessageToCurrentConversation = useConversationStore(
+    state => state.addMessageToCurrentConversation
+  )
 
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (showEmoji) {
       setShowEmoji(false)
+    }
+    if (currentMessage.trim().length) {
+      await addMessageToCurrentConversation({
+        body: currentMessage,
+        isRead: false,
+        sender: user.uid,
+        time: new Date(),
+        type: 'text'
+      })
+      setCurrentMessage('')
+      textareaRef.current?.focus()
     }
   }
 
@@ -37,21 +61,50 @@ export function CurrentConversationNewMessageForm() {
     }
   }
 
-  function handleKeyDown(e: KeyboardEvent<HTMLTextAreaElement>): void {
-    if (e.key === 'Enter' && !e.shiftKey && formRef.current) {
-      e.preventDefault()
-      formRef.current.requestSubmit()
-      if (showEmoji) {
-        setShowEmoji(false)
-      }
+  function handleKeyDown(e: KeyboardEvent<HTMLFormElement>): void {
+    switch (e.key) {
+      case 'Enter':
+        if (!e.shiftKey) {
+          e.preventDefault()
+          formRef.current?.requestSubmit()
+          if (showEmoji) {
+            setShowEmoji(false)
+          }
+        }
+        break
+      case 'Escape':
+        if (showEmoji) {
+          setShowEmoji(false)
+        }
+        break
+      default:
     }
   }
+
+  const EmojiPickerContainer = useMemo(
+    () => (
+      <EmojiPicker
+        height="350px"
+        lazyLoadEmojis
+        emojiStyle={EmojiStyle.NATIVE}
+        onEmojiClick={handleAddEmoji}
+        theme={Theme.DARK}
+        searchPlaceHolder="Buscar"
+        previewConfig={{
+          showPreview: false
+        }}
+        searchDisabled={true}
+      />
+    ),
+    [showEmoji]
+  )
 
   return (
     <form
       ref={formRef}
       className="relative mt-2  flex w-full items-center justify-center rounded-full bg-chattou-backgroundLight p-1 text-chattou-textDarker  focus-within:ring-1 focus-within:ring-chattou-secondary/50 focus-within:ring-offset-1 focus-within:ring-offset-transparent"
       onSubmit={handleSubmit}
+      onKeyDown={handleKeyDown}
     >
       <button
         type="button"
@@ -61,18 +114,7 @@ export function CurrentConversationNewMessageForm() {
         <Smiley weight="fill" size={24} />
         {showEmoji && (
           <span className="absolute left-0 bottom-16">
-            <EmojiPicker
-              height="350px"
-              lazyLoadEmojis
-              emojiStyle={EmojiStyle.NATIVE}
-              onEmojiClick={handleAddEmoji}
-              theme={Theme.DARK}
-              searchPlaceHolder="Buscar"
-              previewConfig={{
-                showPreview: false
-              }}
-              searchDisabled={true}
-            />
+            {EmojiPickerContainer}
           </span>
         )}
       </button>
@@ -81,7 +123,6 @@ export function CurrentConversationNewMessageForm() {
         name="message"
         minRows={1}
         maxRows={6}
-        onKeyDown={handleKeyDown}
         id="message"
         value={currentMessage}
         onChange={handleChangeMessage}
