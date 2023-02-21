@@ -102,7 +102,7 @@ export function CurrentConversationNewMessageForm() {
   return (
     <form
       ref={formRef}
-      className="relative mt-2  flex w-full items-center justify-center rounded-full bg-chattou-backgroundLight p-1 text-chattou-textDarker  focus-within:ring-1 focus-within:ring-chattou-secondary/50 focus-within:ring-offset-1 focus-within:ring-offset-transparent"
+      className="relative mt-2 flex w-full items-center justify-center gap-4 rounded-full bg-chattou-backgroundLight p-1 px-1 text-chattou-textDarker focus-within:ring-1 focus-within:ring-chattou-secondary/50 focus-within:ring-offset-1 focus-within:ring-offset-transparent lg:px-4"
       onSubmit={handleSubmit}
       onKeyDown={handleKeyDown}
     >
@@ -126,7 +126,7 @@ export function CurrentConversationNewMessageForm() {
         id="message"
         value={currentMessage}
         onChange={handleChangeMessage}
-        className="block max-h-14 flex-1 resize-none border-none bg-transparent px-4 text-chattou-primary outline-none scrollbar-thin scrollbar-track-chattou-background scrollbar-thumb-chattou-primary scrollbar-track-rounded-full scrollbar-thumb-rounded-full placeholder:text-chattou-primary"
+        className="block max-h-14 flex-1 resize-none rounded-lg border-none bg-chattou-backgroundLighter py-2 px-4 text-chattou-primary outline-none scrollbar-thin scrollbar-track-chattou-background scrollbar-thumb-chattou-primary scrollbar-track-rounded-full scrollbar-thumb-rounded-full placeholder:text-chattou-primary"
         placeholder="Message"
       />
       <button className="-rotate-45 rounded-full p-2 text-chattou-primary outline-none transition-colors focus:bg-chattou-primary focus:text-chattou-secondary hover:bg-chattou-primary hover:text-chattou-secondary">
