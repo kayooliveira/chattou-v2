@@ -1,14 +1,18 @@
 import { useEffect } from 'react'
+import { useAuthStore } from 'store/auth'
 import { useConversationStore } from 'store/conversation'
 
 import { RecentUsersCard } from './components/RecentUsersCard'
 
 export function RecentUsers() {
   const recentUsers = useConversationStore(state => state.recentUsers)
+
   const getRecentUsers = useConversationStore(state => state.getRecentUsers)
 
+  const user = useAuthStore(state => state.user)
+
   useEffect(() => {
-    const unsub = getRecentUsers()
+    const unsub = getRecentUsers(user.uid)
     return () => unsub()
   }, [])
 

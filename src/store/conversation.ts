@@ -79,7 +79,7 @@ interface State {
   closeCurrentConversation: () => void
   openCurrentConversation: () => void
   toggleCurrentConversation: () => void
-  getRecentUsers: () => Unsubscribe
+  getRecentUsers: (userId: string) => Unsubscribe
   getRecentConversationsIds: (userId: string) => Unsubscribe
   getConversationData: (
     conversationId: string,
@@ -295,10 +295,12 @@ export const useConversationStore = create<State>((setState, getState) => ({
       console.error(error)
     }
   },
-  getRecentUsers: () => {
+  getRecentUsers: userId => {
     try {
       const usersDoc = collection(database, 'users')
-      const unsub = onSnapshot(usersDoc, usersSnapshot => {
+      const usersQuery = query(usersDoc, where('uid', '!=', userId))
+
+      const unsub = onSnapshot(usersQuery, usersSnapshot => {
         if (usersSnapshot.empty) return
         usersSnapshot.forEach(userDoc => {
           if (userDoc.exists()) {
