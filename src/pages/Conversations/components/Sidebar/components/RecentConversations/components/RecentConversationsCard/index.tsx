@@ -56,7 +56,7 @@ export function RecentConversationsCard({ uid }: RecentConversationsCardProps) {
             {conversation.with.name}
           </span>
           <span className="max-w-[25ch] truncate text-xs text-chattou-textDarker">
-            {conversation.lastMessage.includes('data:audio/ogg;')
+            {conversation.lastMessage.includes('data:audio')
               ? 'Audio ▶️'
               : conversation.lastMessage}
           </span>
