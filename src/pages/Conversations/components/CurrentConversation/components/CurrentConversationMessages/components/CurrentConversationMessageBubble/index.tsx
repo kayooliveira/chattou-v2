@@ -54,7 +54,10 @@ export function CurrentConversationMessageBubble({
           </span>
         </p>
       ) : (
-        <AudioPlayer source={getAudioDataFromMessageBody(body)} />
+        <AudioPlayer
+          style={messageAction}
+          source={getAudioDataFromMessageBody(body)}
+        />
       )}
     </div>
   )
