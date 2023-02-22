@@ -33,7 +33,7 @@ export function CurrentConversationHeader({
           <span>{currentConversationUser.name}</span>
           <br />
           <span className="text-xs text-chattou-textDarker">
-            {currentConversationUser.username}a
+            {currentConversationUser.username}
           </span>
         </div>
       </div>
