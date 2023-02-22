@@ -15,11 +15,17 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ source, style = 'in' }) => {
 
   useEffect(() => {
     if (audioRef.current) {
-      audioRef.current.addEventListener('loadedmetadata', () => {
-        setDuration(Math.floor(audioRef.current!.duration * 1000))
-      })
       audioRef.current.addEventListener('timeupdate', () => {
         setCurrentTime(Math.floor(audioRef.current!.currentTime * 1000))
+        setDuration(Math.floor(audioRef.current!.duration * 1000))
+      })
+
+      audioRef.current.addEventListener('loadedmetadata', () => {
+        if (audioRef.current!.duration === Infinity) {
+          audioRef.current!.currentTime = 1e101
+        }
+
+        setDuration(Math.floor(audioRef.current!.duration * 1000))
       })
     }
   }, [])
