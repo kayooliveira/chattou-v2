@@ -57,6 +57,7 @@ export function CurrentConversationNewMessageForm() {
       reader.readAsDataURL(recordingBlob!)
       reader.onloadend = async () => {
         const base64Data = reader.result
+        setAudioURL('')
         await addMessageToCurrentConversation({
           body: base64Data as string,
           isRead: false,
@@ -64,7 +65,6 @@ export function CurrentConversationNewMessageForm() {
           time: new Date(),
           type: 'audio'
         })
-        setAudioURL('')
       }
       return
     }
