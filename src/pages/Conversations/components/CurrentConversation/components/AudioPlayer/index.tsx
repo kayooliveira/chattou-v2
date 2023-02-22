@@ -1,11 +1,13 @@
+import classNames from 'classnames'
 import { PauseCircle, PlayCircle } from 'phosphor-react'
 import React, { useState, useEffect } from 'react'
 
 interface AudioPlayerProps {
   source: string
+  style?: 'in' | 'out'
 }
 
-const AudioPlayer: React.FC<AudioPlayerProps> = ({ source }) => {
+const AudioPlayer: React.FC<AudioPlayerProps> = ({ source, style = 'in' }) => {
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
@@ -59,7 +61,17 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ source }) => {
   }
 
   return (
-    <div className="flex items-center justify-center gap-4 rounded-full rounded-tr-none bg-gradient-to-l from-chattou-primaryDark to-chattou-primary px-4 text-chattou-text ">
+    <div
+      className={classNames(
+        'flex w-fit max-w-[20rem] items-center justify-center gap-6 whitespace-pre-wrap break-words rounded-xl py-2 px-4 text-lg leading-[23px] text-chattou-text after:absolute after:-right-2 after:top-0 after:h-3 after:w-4 after:rounded',
+        {
+          'rounded-tr-none bg-gradient-to-l from-chattou-primaryDark to-chattou-primary':
+            style === 'out',
+          'text-chattou-light rounded-tl-none bg-chattou-backgroundLight':
+            style === 'in'
+        }
+      )}
+    >
       <audio ref={audioRef} src={source} onEnded={handleEnded} />
       <button className="rounded-full py-2" onClick={togglePlay}>
         {isPlaying ? (
