@@ -15,10 +15,14 @@ export function CurrentConversationHeader({
     state => state.getCurrentConversationUser
   )
 
+  const currentConversation = useConversationStore(
+    state => state.currentConversation
+  )
+
   useEffect(() => {
     const unsub = getCurrentConversationUser(setCurrentConversationUser)
     return () => unsub()
-  }, [])
+  }, [currentConversation])
 
   return (
     <header className="flex w-full items-center justify-between rounded-tr-xl rounded-tl-xl bg-chattou-backgroundLight p-2">
