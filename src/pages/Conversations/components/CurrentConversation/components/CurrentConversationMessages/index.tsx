@@ -23,19 +23,8 @@ export function CurrentConversationMessages() {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }
 
-  function onMessagesChange(message: Message) {
-    setMessages(state => {
-      const messageExists = state.find(m => m.id === message.id)
-      if (messageExists) {
-        return state.map(m => {
-          if (m.id === message.id) {
-            return message
-          }
-          return m
-        })
-      }
-      return [...state, message]
-    })
+  function onMessagesChange(messages: Message[]) {
+    setMessages(messages)
     scrollToNewestMessage()
   }
 
