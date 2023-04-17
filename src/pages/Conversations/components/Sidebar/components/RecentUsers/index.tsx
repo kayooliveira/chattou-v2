@@ -17,7 +17,7 @@ export function RecentUsers() {
   }, [])
 
   return (
-    <div className="my-3 w-full lg:my-6">
+    <div className="max-w-ful my-3 lg:my-6">
       <span className="mb-1 flex w-fit items-center justify-center gap-2 rounded-full bg-gradient-to-r from-chattou-primary to-chattou-primaryDark p-0.5 px-3 text-xs font-bold lg:text-base">
         <span className="h-3 w-3 rounded-full bg-yellow-500" />
         Recent Active
