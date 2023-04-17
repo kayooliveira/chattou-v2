@@ -67,7 +67,7 @@ interface State {
     onConversationChange: (newUser: User) => void
   ) => Unsubscribe
   getCurrentConversationMessages: (
-    onMessageChange: (newMessage: Message) => void
+    onMessageChange: (newMessage: Message[]) => void
   ) => Unsubscribe
   addMessageToCurrentConversation: (
     message: Omit<Message, 'id'>
@@ -163,6 +163,7 @@ export const useConversationStore = create<State>((setState, getState) => ({
       )
       const messagesQuery = query(messagesCol, orderBy('time', 'asc'))
       const unsub = onSnapshot(messagesQuery, messagesSnap => {
+        const newMessages: Message[] = []
         messagesSnap.forEach(messageDoc => {
           if (messageDoc.exists()) {
             const messageData = messageDoc.data()
@@ -175,10 +176,12 @@ export const useConversationStore = create<State>((setState, getState) => ({
                 time: new Date(messageData.time.seconds * 1000),
                 type: messageData.type
               }
-              onMessagesChange(newMessage)
+              newMessages.push(newMessage)
             }
           }
         })
+
+        onMessagesChange(newMessages)
       })
       return unsub
     } catch (error) {
@@ -441,9 +444,7 @@ export const useConversationStore = create<State>((setState, getState) => ({
       const currentConversationId = actualState.currentConversation
       const conversationId = conversation || currentConversationId
       const conversationDoc = doc(database, 'conversations', conversationId)
-      await updateDoc(conversationDoc, {
-        lastMessageReadTime: new Date()
-      })
+
       const messagesCol = collection(
         database,
         `conversations/${conversationId}/messages`
@@ -453,11 +454,17 @@ export const useConversationStore = create<State>((setState, getState) => ({
         const ids: string[] = []
         messagesDoc.forEach(messageDoc => {
           if (messageDoc.exists()) {
+            if (messageDoc.data().isRead) return
             ids.push(messageDoc.id)
           }
         })
         return ids
       })
+      if (messagesIds.length) {
+        await updateDoc(conversationDoc, {
+          lastMessageReadTime: new Date()
+        })
+      }
 
       messagesIds.forEach(async messageId => {
         const messageDoc = doc(
